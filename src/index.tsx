@@ -78,7 +78,7 @@ export const DataDictionaryGraph : FC = () => {
               'label': 'data(name)',
               'text-valign': 'bottom',
               'color': 'black',
-              'font-size': '8px',
+              'font-size': '10px',
               'padding': '10px'
             }
           },
