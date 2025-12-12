@@ -13,9 +13,9 @@ function createData(graphArray: any[], data: any, type: string) : any[] {
       graphArray.push({data: { id: type + index, name: element.EntityName, type: type } });
     }
 
-    if (type === 'superclass' || type === 'isAttributeOf' || type === 'related') {
+    if (type === 'subclass' || type === 'isAttributeOf' || type === 'related') {
       graphArray.push({ data: { id: 'selected-' + type + index, source: nodeId, target: 'selected', type: type } });
-    } else if (type === 'subclass' || type === 'hasAttribute' || type === 'collection') {
+    } else if (type === 'superclass' || type === 'hasAttribute' || type === 'collection') {
       graphArray.push({ data: { id: 'selected-' + type + index, source: 'selected', target: nodeId, type: type } });
     }
   }
@@ -69,6 +69,7 @@ export const DataDictionaryGraph : FC = () => {
       const cy = cytoscape({
         container: cyRef.current,
         elements: graphArray,
+        wheelSensitivity: 0.5,
         style: [
           {
             selector: 'node',
@@ -76,7 +77,7 @@ export const DataDictionaryGraph : FC = () => {
               'label': 'data(name)',
               'text-valign': 'bottom',
               'color': 'black',
-              'font-size': '10px',
+              'font-size': '15px',
               'padding': '10px',
               'width': '30px',
               'height': '30px'
@@ -196,13 +197,49 @@ export const DataDictionaryGraph : FC = () => {
               'target-arrow-color': 'black',
               'line-style': 'dashed',
               'source-arrow-shape': 'none',
+              'target-arrow-fill': 'hollow',
             }
           },
         ],
         layout: {
-          name: 'cose'
-        }
+          name: 'preset',
+          fit: true
+        } as any, 
       });
+
+      const verticalDistance = 150;
+      const horizontalDistance = 200;
+      const spacing = 100;
+
+      const distributeNodesInLine = (nodes: any, startX: number, startY: number, spacing: number, axis: 'x' | 'y' = 'x') => {
+          const totalNodes = nodes.length;
+          if (totalNodes === 0) return;
+          const offset = ((totalNodes - 1) * spacing) / 2;
+          
+          nodes.forEach((node: any, index: number) => {
+              let x = startX;
+              let y = startY;
+
+              if (axis === 'x') {
+                  x = startX + (index * spacing) - offset;
+              } else {
+                  y = startY + (index * spacing) - offset;
+              }
+              
+              node.position({ x, y });
+          });
+      };
+
+      cy.getElementById('selected').position({ x: 0, y: 0 });
+
+      distributeNodesInLine(cy.nodes('[type="superclass"]'), 0, -verticalDistance, spacing, 'x');
+      distributeNodesInLine(cy.nodes('[type="subclass"], [type="collection"]'), 0, verticalDistance, spacing, 'x');
+      distributeNodesInLine(cy.nodes('[type="hasAttribute"]'), -horizontalDistance, 0, spacing, 'y');
+      distributeNodesInLine(cy.nodes('[type="isAttributeOf"]'), horizontalDistance, 0, spacing, 'y');
+      distributeNodesInLine(cy.nodes('[type="related"]'), horizontalDistance / 2, -verticalDistance / 2, spacing, 'x');
+      
+      cy.fit(cy.elements(), 50);
+
       return () => cy.destroy();
     }
   }, [graphArray, connectionDataString, collectionIconUri]);
