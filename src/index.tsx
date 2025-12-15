@@ -103,10 +103,10 @@ export const DataDictionaryGraph : FC = () => {
               'label': 'data(name)',
               'text-valign': 'bottom',
               'color': 'black',
-              'font-size': '18px',
+              'font-size': '20px',
               'padding': '10px',
-              'width': '30px',
-              'height': '30px',
+              'width': '50px',
+              'height': '50px',
               'text-wrap': 'wrap',
               'text-max-width': '100px',
             }
@@ -118,13 +118,6 @@ export const DataDictionaryGraph : FC = () => {
               'shape': 'star',
               'width': '50px',
               'height': '50px'
-            }
-          },
-          {
-            selector: 'node[type="superclass"], node[type="subclass"], node[type="hasAttribute"], node[type="isAttributeOf"], node[type="related"], node[type="collection"]',
-            style: {
-                'width': '25px',
-                'height': '25px',
             }
           },
           {
@@ -167,13 +160,6 @@ export const DataDictionaryGraph : FC = () => {
             style: {
               'background-color': '#808080',
               'shape': 'rhomboid'
-            }
-          },
-          {
-            selector: 'node[type="superclass"], node[type="subclass"], node[type="hasAttribute"], node[type="isAttributeOf"], node[type="related"]',
-            style: {
-                'width': '20px', 
-                'height': '20px',
             }
           },
           {
