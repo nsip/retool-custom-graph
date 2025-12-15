@@ -49,6 +49,29 @@ function parseData(connectionDataString: any, graphArray: any[]){
   return graphArray;
 }
 
+function distributeNodesInGrid(nodes: any, startX: number, startY: number, spacing: number, nodesPerLine: number, axis: 'x' | 'y' = 'x'){
+    const totalNodes = nodes.length;
+    if (totalNodes === 0) return;
+
+    nodes.forEach((node: any, index: number) => {
+      const row = Math.floor(index / nodesPerLine);
+      const col = index % nodesPerLine;
+
+      let x, y;
+
+      if (axis === 'x') {
+          x = startX + (col * spacing) - ((Math.min(totalNodes, nodesPerLine) - 1) * spacing / 2);
+          y = startY + (row * spacing * 0.8);
+      } else {
+          x = startX + (row * spacing * 0.8);
+          y = startY + (col * spacing) - ((Math.min(totalNodes, nodesPerLine) - 1) * spacing / 2);
+      }
+      
+      node.position({ x, y });
+    });
+};
+
+
 export const DataDictionaryGraph : FC = () => {
   const cyRef = useRef(null);
 
@@ -58,8 +81,6 @@ export const DataDictionaryGraph : FC = () => {
   });
 
   let graphArray: any[] = [];
-  
-  const collectionIconUri = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20640%20640%22%3E%3C!--!Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A%2F%2Ffontawesome.com%20License%20-%20https%3A%2F%2Ffontawesome.com%2Flicense%2Ffree%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M480%20576L192%20576C139%20576%2096%20533%2096%20480L96%20160C96%20107%20139%2064%20192%2064L496%2064C522.5%2064%20544%2085.5%20544%20112L544%20400C544%20420.9%20530.6%20438.7%20512%20445.3L512%20512C529.7%20512%20544%20526.3%20544%20544C544%20561.7%20529.7%20576%20512%20576L480%20576zM192%20448C174.3%20448%20160%20462.3%20160%20480C160%20497.7%20174.3%20512%20192%20512L448%20512L448%20448L192%20448zM224%20216C224%20229.3%20234.7%20240%20248%20240L424%20240C437.3%20240%20448%20229.3%20448%20216C448%20202.7%20437.3%20192%20424%20192L248%20192C234.7%20192%20224%20202.7%20224%20216zM248%20288C234.7%20288%20224%20298.7%20224%20312C224%20325.3%20234.7%20336%20248%20336L424%20336C437.3%20336%20448%20325.3%20448%20312C448%20298.7%20437.3%20288%20424%20288L248%20288z%22%2F%3E%3C%2Fsvg%3E';
   
   if (connectionDataString) {
     try {
@@ -74,7 +95,7 @@ export const DataDictionaryGraph : FC = () => {
       const cy = cytoscape({
         container: cyRef.current,
         elements: graphArray,
-        wheelSensitivity: 0.5,
+        wheelSensitivity: 0.3,
         style: [
           {
             selector: 'node',
@@ -82,11 +103,12 @@ export const DataDictionaryGraph : FC = () => {
               'label': 'data(name)',
               'text-valign': 'bottom',
               'color': 'black',
-              'font-size': '15px',
+              'font-size': '18px',
               'padding': '10px',
               'width': '30px',
               'height': '30px',
               'text-wrap': 'wrap',
+              'text-max-width': '100px',
             }
           },
           {
@@ -143,18 +165,8 @@ export const DataDictionaryGraph : FC = () => {
           {
             selector: 'node[type="collection"]',
             style: {
-              'width': '30px',
-              'height': '30px', 
-              'background-color': 'white', 
-              'shape': 'ellipse', 
-              'background-image': collectionIconUri,
-              'background-fit': 'contain',
-              'background-clip': 'none',
-              'background-opacity': 1,
-              'label': 'data(name)',
-              'text-valign': 'bottom',
-              'background-position-x': '50%',
-              'background-position-y': '50%',
+              'background-color': '#808080',
+              'shape': 'rhomboid'
             }
           },
           {
@@ -213,42 +225,24 @@ export const DataDictionaryGraph : FC = () => {
         } as any, 
       });
 
-      const verticalDistance = 150;
-      const horizontalDistance = 200;
-      const spacing = 100;
-
-      const distributeNodesInLine = (nodes: any, startX: number, startY: number, spacing: number, axis: 'x' | 'y' = 'x') => {
-          const totalNodes = nodes.length;
-          if (totalNodes === 0) return;
-          const offset = ((totalNodes - 1) * spacing) / 2;
-          
-          nodes.forEach((node: any, index: number) => {
-              let x = startX;
-              let y = startY;
-
-              if (axis === 'x') {
-                  x = startX + (index * spacing) - offset;
-              } else {
-                  y = startY + (index * spacing) - offset;
-              }
-              
-              node.position({ x, y });
-          });
-      };
+      const verticalDistance = 200;
+      const horizontalDistance = 250;
+      const spacing = 150;
+      const nodesPerLine = 10;
 
       cy.getElementById('selected').position({ x: 0, y: 0 });
 
-      distributeNodesInLine(cy.nodes('[type="superclass"]'), 0, -verticalDistance, spacing, 'x');
-      distributeNodesInLine(cy.nodes('[type="subclass"], [type="collection"]'), 0, verticalDistance, spacing, 'x');
-      distributeNodesInLine(cy.nodes('[type="hasAttribute"]'), -horizontalDistance, 0, spacing, 'y');
-      distributeNodesInLine(cy.nodes('[type="isAttributeOf"]'), horizontalDistance, 0, spacing, 'y');
-      distributeNodesInLine(cy.nodes('[type="related"]'), horizontalDistance / 2, -verticalDistance / 2, spacing, 'x');
-      
-      cy.fit(cy.elements(), 50);
+      distributeNodesInGrid(cy.nodes('[type="superclass"]'), 0, -verticalDistance, spacing, nodesPerLine, 'x');
+      distributeNodesInGrid(cy.nodes('[type="subclass"], [type="collection"]'), 0, verticalDistance, spacing, nodesPerLine, 'x');
+      distributeNodesInGrid(cy.nodes('[type="hasAttribute"]'), -horizontalDistance, 0, spacing, nodesPerLine, 'y');
+      distributeNodesInGrid(cy.nodes('[type="isAttributeOf"]'), horizontalDistance, 0, spacing, nodesPerLine, 'y');
+      distributeNodesInGrid(cy.nodes('[type="related"]'), 0, (-verticalDistance/2), spacing, nodesPerLine, 'x'); 
+
+      cy.layout({ name: 'preset', fit: true, padding: 50 } as any).run();
 
       return () => cy.destroy();
     }
-  }, [graphArray, connectionDataString, collectionIconUri]);
+  }, [graphArray, connectionDataString]);
   
   return <div ref={cyRef} style={{ width: '100%', height: '100%' }} />;
 }
