@@ -22,6 +22,33 @@ function createData(graphArray: any[], data: any, type: string) : any[] {
   return graphArray;
 }
 
+function parseData(connectionDataString: any, graphArray: any[]){
+  const graphData = JSON.parse(connectionDataString);
+  if (graphData && graphData.selected && graphData.selected.Entity_Name) {
+    graphArray.push({ data: { id: 'selected', name: graphData.selected.Entity_Name, type: 'selected' } });
+
+    if(graphData.superclass){
+      graphArray = createData(graphArray, graphData.superclass, 'superclass')
+    }
+    if(graphData.subclass){
+      graphArray = createData(graphArray, graphData.subclass, 'subclass')
+    }
+    if(graphData.collection){
+      graphArray = createData(graphArray, graphData.collection, 'collection')
+    }
+    if(graphData.hasAttribute){
+      graphArray = createData(graphArray, graphData.hasAttribute, 'hasAttribute')
+    }
+    if(graphData.isAttributeOf){
+      graphArray = createData(graphArray, graphData.isAttributeOf, 'isAttributeOf')
+    }
+    if(graphData.related){
+        graphArray = createData(graphArray, graphData.related, 'related')
+    }
+  }
+  return graphArray;
+}
+
 export const DataDictionaryGraph : FC = () => {
   const cyRef = useRef(null);
 
@@ -30,35 +57,13 @@ export const DataDictionaryGraph : FC = () => {
     initialValue: '{"Entity_Name":"Loading..."}' 
   });
 
-  let graphArray = [];
+  let graphArray: any[] = [];
   
   const collectionIconUri = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20640%20640%22%3E%3C!--!Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A%2F%2Ffontawesome.com%20License%20-%20https%3A%2F%2Ffontawesome.com%2Flicense%2Ffree%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M480%20576L192%20576C139%20576%2096%20533%2096%20480L96%20160C96%20107%20139%2064%20192%2064L496%2064C522.5%2064%20544%2085.5%20544%20112L544%20400C544%20420.9%20530.6%20438.7%20512%20445.3L512%20512C529.7%20512%20544%20526.3%20544%20544C544%20561.7%20529.7%20576%20512%20576L480%20576zM192%20448C174.3%20448%20160%20462.3%20160%20480C160%20497.7%20174.3%20512%20192%20512L448%20512L448%20448L192%20448zM224%20216C224%20229.3%20234.7%20240%20248%20240L424%20240C437.3%20240%20448%20229.3%20448%20216C448%20202.7%20437.3%20192%20424%20192L248%20192C234.7%20192%20224%20202.7%20224%20216zM248%20288C234.7%20288%20224%20298.7%20224%20312C224%20325.3%20234.7%20336%20248%20336L424%20336C437.3%20336%20448%20325.3%20448%20312C448%20298.7%20437.3%20288%20424%20288L248%20288z%22%2F%3E%3C%2Fsvg%3E';
   
   if (connectionDataString) {
     try {
-      const graphData = JSON.parse(connectionDataString);
-      if (graphData && graphData.selected && graphData.selected.Entity_Name) {
-        graphArray.push({ data: { id: 'selected', name: graphData.selected.Entity_Name, type: 'selected' } });
-
-        if(graphData.superclass){
-          graphArray = createData(graphArray, graphData.superclass, 'superclass')
-        }
-        if(graphData.subclass){
-          graphArray = createData(graphArray, graphData.subclass, 'subclass')
-        }
-        if(graphData.collection){
-          graphArray = createData(graphArray, graphData.collection, 'collection')
-        }
-        if(graphData.hasAttribute){
-          graphArray = createData(graphArray, graphData.hasAttribute, 'hasAttribute')
-        }
-        if(graphData.isAttributeOf){
-          graphArray = createData(graphArray, graphData.isAttributeOf, 'isAttributeOf')
-        }
-        if(graphData.related){
-           graphArray = createData(graphArray, graphData.related, 'related')
-        }
-      }
+      graphArray = parseData(connectionDataString, graphArray)
     } catch (e) {
       console.error("David Error parsing incoming JSON data:", e);
     }
@@ -80,7 +85,8 @@ export const DataDictionaryGraph : FC = () => {
               'font-size': '15px',
               'padding': '10px',
               'width': '30px',
-              'height': '30px'
+              'height': '30px',
+              'text-wrap': 'wrap',
             }
           },
           {
