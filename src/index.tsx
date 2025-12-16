@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, FC } from 'react';
 import cytoscape from 'cytoscape';
 import { Retool } from '@tryretool/custom-component-support'
+import { MdZoomIn, MdZoomOut, MdFitScreen } from 'react-icons/md';
 
 function createData(graphArray: any[], data: any, type: string) : any[] {
   for (let index = 0; index < data.length; index++) {
@@ -71,9 +72,9 @@ function distributeNodesInGrid(nodes: any, startX: number, startY: number, spaci
     });
 };
 
-
 export const DataDictionaryGraph : FC = () => {
-  const cyRef = useRef(null);
+  const cyRef = useRef<HTMLDivElement>(null);
+  const cyInstance = useRef<cytoscape.Core | null>(null); 
 
   const [connectionDataString, setConnectionDataString] = Retool.useStateString({
     name: "data",
@@ -89,6 +90,25 @@ export const DataDictionaryGraph : FC = () => {
       console.error("Error parsing incoming JSON data:", e);
     }
   }
+
+  const handleFitView = () => {
+    if (cyInstance.current) {
+      cyInstance.current.fit(undefined, 50); 
+    }
+  };
+
+  const handleZoomIn = () => {
+    if (cyInstance.current) {
+        cyInstance.current.zoom(cyInstance.current.zoom() * 1.2); 
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (cyInstance.current) {
+      const zoomLevel = cyInstance.current.zoom();
+      cyInstance.current.zoom(zoomLevel / 1.2);
+    }
+  };
   
   useEffect(() => {
     if (cyRef.current && graphArray.length > 0) {
@@ -198,9 +218,28 @@ export const DataDictionaryGraph : FC = () => {
             selector: 'edge[type="related"]',
             style: {
               'line-color': 'black',
-              'line-style': 'dashed',
               'source-arrow-shape': 'none',
               'target-arrow-shape': 'none',
+            }
+          },
+          {
+            selector: 'edge[type="hasAttribute"]',
+            style: {
+              'line-color': 'black',
+              'line-style': 'solid',
+              'target-arrow-shape': 'diamond',
+              'target-arrow-fill': 'filled'
+            }
+          },
+          {
+            selector: 'edge[type="isAttributeOf"]',
+            style: {
+              'line-color': 'black',
+              'line-style': 'solid',
+              'target-arrow-shape': 'diamond',
+              'target-arrow-fill': 'filled',
+              'target-arrow-color': 'black',
+              'source-arrow-shape': 'none',
             }
           },
         ],
@@ -209,6 +248,8 @@ export const DataDictionaryGraph : FC = () => {
           fit: true
         } as any, 
       });
+
+      cyInstance.current = cy;
 
       const verticalDistance = 200;
       const horizontalDistance = 250;
@@ -225,9 +266,41 @@ export const DataDictionaryGraph : FC = () => {
 
       cy.layout({ name: 'preset', fit: true, padding: 50 } as any).run();
 
-      return () => cy.destroy();
+      return () => {
+         if (cyInstance.current) {
+            cyInstance.current.destroy();
+            cyInstance.current = null;
+        }
+      };
+    } else if (cyInstance.current) {
+        cyInstance.current.destroy();
+        cyInstance.current = null;
     }
   }, [graphArray, connectionDataString]);
   
-  return <div ref={cyRef} style={{ width: '100%', height: '100%' }} />;
+  return (<div style={{position: 'absolute', width: '100%', height: '100%'}}>
+    <div style={{
+      position: 'absolute',
+      bottom: 10,
+      right: 10,
+      zIndex: 10,
+      backgroundColor: '#fff',
+      padding: '5px',
+      borderRadius: '4px',
+      boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+      display: 'flex',
+      gap: '5px'
+    }}>
+      <button onClick={handleZoomOut} title="Zoom Out" style={{ cursor: 'pointer' }}>
+        <MdZoomOut size={18} />
+      </button>
+      <button onClick={handleFitView} title="Fit Content" style={{ cursor: 'pointer' }}>
+        <MdFitScreen size={18} />
+      </button>
+      <button onClick={handleZoomIn} title="Zoom In" style={{ cursor: 'pointer' }}>
+        <MdZoomIn size={18} />
+        </button>
+    </div>
+    <div ref={cyRef} style={{ width: '100%', height: '100%' }} />
+  </div>);
 }
