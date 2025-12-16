@@ -86,7 +86,7 @@ export const DataDictionaryGraph : FC = () => {
     try {
       graphArray = parseData(connectionDataString, graphArray)
     } catch (e) {
-      console.error("David Error parsing incoming JSON data:", e);
+      console.error("Error parsing incoming JSON data:", e);
     }
   }
   
