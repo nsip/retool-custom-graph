@@ -138,7 +138,7 @@ export const DataDictionaryGraph : FC = () => {
             selector: 'node[type="hasAttribute"]',
             style: {
               'background-color': '#28a745',
-              'shape': 'ellipse'
+              'shape': 'rectangle'
             }
           },
           {
@@ -198,10 +198,9 @@ export const DataDictionaryGraph : FC = () => {
             selector: 'edge[type="related"]',
             style: {
               'line-color': 'black',
-              'target-arrow-color': 'black',
               'line-style': 'dashed',
               'source-arrow-shape': 'none',
-              'target-arrow-fill': 'hollow',
+              'target-arrow-shape': 'none',
             }
           },
         ],
